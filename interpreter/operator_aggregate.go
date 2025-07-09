@@ -425,7 +425,7 @@ func (i *interpreter) evalMaxTime(m model.IUnaryExpression, operand result.Value
 		if err != nil {
 			return result.Value{}, err
 		}
-		if compareResult == leftBeforeRight {
+		if compareResult == LeftBeforeRight {
 			maxVal = v
 		}
 	}
@@ -477,7 +477,7 @@ func (i *interpreter) evalMaxDate(m model.IUnaryExpression, operand result.Value
 		if err != nil {
 			return result.Value{}, err
 		}
-		if compareResult == leftBeforeRight {
+		if compareResult == LeftBeforeRight {
 			dt = v
 		}
 	}
@@ -526,7 +526,7 @@ func (i *interpreter) evalMaxDateTime(m model.IUnaryExpression, operand result.V
 		if err != nil {
 			return result.Value{}, err
 		}
-		if compareResult == leftBeforeRight {
+		if compareResult == LeftBeforeRight {
 			dt = v
 		}
 	}
@@ -796,7 +796,7 @@ func (i *interpreter) evalMinTime(m model.IUnaryExpression, operand result.Value
 		if err != nil {
 			return result.Value{}, err
 		}
-		if compareResult == leftAfterRight {
+		if compareResult == LeftAfterRight {
 			minVal = v
 		}
 	}
@@ -847,7 +847,7 @@ func (i *interpreter) evalMinDate(m model.IUnaryExpression, operand result.Value
 		if err != nil {
 			return result.Value{}, err
 		}
-		if compareResult == leftAfterRight {
+		if compareResult == LeftAfterRight {
 			dt = v
 		}
 	}
@@ -895,7 +895,7 @@ func (i *interpreter) evalMinDateTime(m model.IUnaryExpression, operand result.V
 		if err != nil {
 			return result.Value{}, err
 		}
-		if compareResult == leftAfterRight {
+		if compareResult == LeftAfterRight {
 			dt = v
 		}
 	}
@@ -983,47 +983,6 @@ func calculateMedianFloat64(values []float64) float64 {
 		return (values[mid-1] + values[mid]) / 2
 	}
 	return values[mid]
-}
-
-// compareTime compares two Time values and returns the comparison result.
-// Similar to compareDateTime but for Time values.
-func compareTime(left, right result.Time) (comparison, error) {
-	// Compare hour
-	if left.Date.Hour() > right.Date.Hour() {
-		return leftAfterRight, nil
-	}
-	if left.Date.Hour() < right.Date.Hour() {
-		return leftBeforeRight, nil
-	}
-
-	// Compare minute
-	if left.Date.Minute() > right.Date.Minute() {
-		return leftAfterRight, nil
-	}
-	if left.Date.Minute() < right.Date.Minute() {
-		return leftBeforeRight, nil
-	}
-
-	// Compare second
-	if left.Date.Second() > right.Date.Second() {
-		return leftAfterRight, nil
-	}
-	if left.Date.Second() < right.Date.Second() {
-		return leftBeforeRight, nil
-	}
-
-	// Compare millisecond (nanoseconds / 1000000)
-	leftMs := left.Date.Nanosecond() / 1000000
-	rightMs := right.Date.Nanosecond() / 1000000
-	if leftMs > rightMs {
-		return leftAfterRight, nil
-	}
-	if leftMs < rightMs {
-		return leftBeforeRight, nil
-	}
-
-	// If all components are equal
-	return leftEqualRight, nil
 }
 
 // PopulationStdDev(argument List<Decimal>) Decimal

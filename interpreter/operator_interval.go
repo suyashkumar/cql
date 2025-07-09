@@ -449,13 +449,13 @@ func numeralInInterval[t float64 | int64 | int32](point, startVal, endVal t) (re
 	return inInterval(lowCompare, highCompare, true, true)
 }
 
-func compareNumeral[t float64 | int64 | int32](left, right t) comparison {
+func compareNumeral[t float64 | int64 | int32](left, right t) Comparison {
 	if left == right {
-		return leftEqualRight
+		return LeftEqualRight
 	} else if left < right {
-		return leftBeforeRight
+		return LeftBeforeRight
 	}
-	return leftAfterRight
+	return LeftAfterRight
 }
 
 // duringDateTimeWithPrecision returns whether or not the given DateTimeValue is during the given
@@ -464,18 +464,18 @@ func compareNumeral[t float64 | int64 | int32](left, right t) comparison {
 // All values are expected to be inclusive bounds.
 // Return a null value if the comparison cannot be made due to insufficient precision.
 func dateTimeInIntervalWithPrecision(a, low, high result.DateTime, p model.DateTimePrecision) (result.Value, error) {
-	lowComp, err := compareDateTimeWithPrecision(a, low, p)
+	lowComp, err := CompareDateTimeWithPrecision(a, low, p)
 	if err != nil {
 		return result.Value{}, err
 	}
-	highComp, err := compareDateTimeWithPrecision(a, high, p)
+	highComp, err := CompareDateTimeWithPrecision(a, high, p)
 	if err != nil {
 		return result.Value{}, err
 	}
 
-	if lowComp == insufficientPrecision || highComp == insufficientPrecision {
+	if lowComp == InsufficientPrecision || highComp == InsufficientPrecision {
 		return result.New(nil)
-	} else if (lowComp == leftEqualRight || lowComp == leftAfterRight) && (highComp == leftEqualRight || highComp == leftBeforeRight) {
+	} else if (lowComp == LeftEqualRight || lowComp == LeftAfterRight) && (highComp == LeftEqualRight || highComp == LeftBeforeRight) {
 		return result.New(true)
 	}
 	return result.New(false)
@@ -510,19 +510,19 @@ func (i *interpreter) evalInIntervalDateTime(b model.IBinaryExpression, pointObj
 		return result.Value{}, err
 	}
 
-	var lowCompare, highCompare comparison
+	var lowCompare, highCompare Comparison
 	s, err := start(intervalObj, &i.evaluationTimestamp)
 	if err != nil {
 		return result.Value{}, err
 	}
 	if result.IsNull(s) {
-		lowCompare = comparedToNull
+		lowCompare = ComparedToNull
 	} else {
 		low, err := result.ToDateTime(s)
 		if err != nil {
 			return result.Value{}, err
 		}
-		lowCompare, err = compareDateTimeWithPrecision(point, low, precision)
+		lowCompare, err = CompareDateTimeWithPrecision(point, low, precision)
 		if err != nil {
 			return result.Value{}, err
 		}
@@ -533,13 +533,13 @@ func (i *interpreter) evalInIntervalDateTime(b model.IBinaryExpression, pointObj
 		return result.Value{}, err
 	}
 	if result.IsNull(e) {
-		highCompare = comparedToNull
+		highCompare = ComparedToNull
 	} else {
 		high, err := result.ToDateTime(e)
 		if err != nil {
 			return result.Value{}, err
 		}
-		highCompare, err = compareDateTimeWithPrecision(point, high, precision)
+		highCompare, err = CompareDateTimeWithPrecision(point, high, precision)
 		if err != nil {
 			return result.Value{}, err
 		}
@@ -548,28 +548,28 @@ func (i *interpreter) evalInIntervalDateTime(b model.IBinaryExpression, pointObj
 	return inInterval(lowCompare, highCompare, interval.LowInclusive, interval.HighInclusive)
 }
 
-func inInterval(lowCompare, highCompare comparison, lowInclusive, highInclusive bool) (result.Value, error) {
+func inInterval(lowCompare, highCompare Comparison, lowInclusive, highInclusive bool) (result.Value, error) {
 	// This includes cases where we know the point is for sure outside the interval such as:
 	// 5 in Interval[0, 2] - point is outside the interval
-	if lowCompare == leftBeforeRight || highCompare == leftAfterRight {
+	if lowCompare == LeftBeforeRight || highCompare == LeftAfterRight {
 		return result.New(false)
 	}
 
 	// Handles Cases:
 	// 3 in Interval[0, 3) - point is on the exclusive bound
 	// 3 in Interval[3, 3) - ignores cases like this, the will fall through to null
-	if (lowCompare == leftEqualRight && !lowInclusive) && !(highCompare == leftEqualRight && highInclusive) {
+	if (lowCompare == LeftEqualRight && !lowInclusive) && !(highCompare == LeftEqualRight && highInclusive) {
 		return result.New(false)
 	}
-	if (highCompare == leftEqualRight && !highInclusive) && !(lowCompare == leftEqualRight && lowInclusive) {
+	if (highCompare == LeftEqualRight && !highInclusive) && !(lowCompare == LeftEqualRight && lowInclusive) {
 		return result.New(false)
 	}
 
 	// This handles three cases:
 	// 3 in Interval[0, 5] - point is within the interval
 	// 3 in Interval[0, 3] - point is on the boundary but the boundary is inclusive
-	if lowCompare == leftAfterRight || (lowInclusive && lowCompare == leftEqualRight) {
-		if highCompare == leftBeforeRight || (highInclusive && highCompare == leftEqualRight) {
+	if lowCompare == LeftAfterRight || (lowInclusive && lowCompare == LeftEqualRight) {
+		if highCompare == LeftBeforeRight || (highInclusive && highCompare == LeftEqualRight) {
 			return result.New(true)
 		}
 	}

@@ -280,6 +280,78 @@ func beforeOrEqualDateTimeWithPrecision(l, r result.DateTime, p model.DateTimePr
 	return result.Value{}, errors.New("internal error - reached the end of timeComparison enum in dateTimeBefore")
 }
 
+func afterTime(l, r result.Time) (result.Value, error) {
+	compareResult, err := compareTime(l, r)
+	if err != nil {
+		return result.Value{}, err
+	}
+	switch compareResult {
+	case leftBeforeRight:
+		return result.New(false)
+	case leftEqualRight:
+		return result.New(false)
+	case leftAfterRight:
+		return result.New(true)
+	case insufficientPrecision:
+		return result.New(nil)
+	}
+	return result.Value{}, errors.New("internal error - reached the end of timeComparison enum in dateAfter")
+}
+
+func afterOrEqualTime(l, r result.Time) (result.Value, error) {
+	compareResult, err := compareTime(l, r)
+	if err != nil {
+		return result.Value{}, err
+	}
+	switch compareResult {
+	case leftBeforeRight:
+		return result.New(false)
+	case leftEqualRight:
+		return result.New(true)
+	case leftAfterRight:
+		return result.New(true)
+	case insufficientPrecision:
+		return result.New(nil)
+	}
+	return result.Value{}, errors.New("internal error - reached the end of timeComparison enum in dateAfter")
+}
+
+func beforeTime(l, r result.Time) (result.Value, error) {
+	compareResult, err := compareTime(l, r)
+	if err != nil {
+		return result.Value{}, err
+	}
+	switch compareResult {
+	case leftBeforeRight:
+		return result.New(true)
+	case leftEqualRight:
+		return result.New(false)
+	case leftAfterRight:
+		return result.New(false)
+	case insufficientPrecision:
+		return result.New(nil)
+	}
+	return result.Value{}, errors.New("internal error - reached the end of timeComparison enum in dateTimeBefore")
+}
+
+func beforeOrEqualTime(l, r result.Time) (result.Value, error) {
+	compareResult, err := compareTime(l, r)
+	if err != nil {
+		return result.Value{}, err
+	}
+	switch compareResult {
+	case leftBeforeRight:
+		return result.New(true)
+	case leftEqualRight:
+		return result.New(true)
+	case leftAfterRight:
+		return result.New(false)
+	case insufficientPrecision:
+		return result.New(nil)
+	}
+	return result.Value{}, errors.New("internal error - reached the end of timeComparison enum in dateTimeBefore")
+}
+
 // CanConvertQuantity(left Quantity, right String) Boolean
 // https://cql.hl7.org/09-b-cqlreference.html#canconvertquantity
 // Returns whether or not a Quantity can be converted into the given unit string.
@@ -704,15 +776,15 @@ func dateTimeDifference(l, r result.DateTime, opPrecision model.DateTimePrecisio
 	}
 }
 
-type comparison int
+type Comparison int
 
 const (
-	unsetComparison comparison = iota
-	leftBeforeRight
-	leftEqualRight
-	leftAfterRight
-	insufficientPrecision
-	comparedToNull
+	UnsetComparison Comparison = iota
+	LeftBeforeRight
+	LeftEqualRight
+	LeftAfterRight
+	InsufficientPrecision
+	ComparedToNull
 )
 
 // orderedPrecisions are DateTimePrecisions ordered from least precise to most precise.
@@ -742,12 +814,12 @@ func getFinestPrecision(l, r model.DateTimePrecision) (model.DateTimePrecision, 
 // compareDateTimeWithPrecision returns a comparison of DateTimeValues with the given maximum
 // TimePrecision. If either left or right has insufficient precision to determine which is greater
 // before reaching maxPrecision then insufficientPrecision is returned.
-func compareDateTimeWithPrecision(left, right result.DateTime, maxPrecision model.DateTimePrecision) (comparison, error) {
+func CompareDateTimeWithPrecision(left, right result.DateTime, maxPrecision model.DateTimePrecision) (Comparison, error) {
 	if maxPrecision == model.UNSETDATETIMEPRECISION {
 		// If precision is unset, proceed until the finest precision specified by either input.
 		finestPrecision, err := getFinestPrecision(left.Precision, right.Precision)
 		if err != nil {
-			return unsetComparison, err
+			return UnsetComparison, err
 		}
 		maxPrecision = finestPrecision
 	}
@@ -790,19 +862,69 @@ func compareDateTimeWithPrecision(left, right result.DateTime, maxPrecision mode
 		}
 		if p == maxPrecision {
 			// Reached the max required precision, so they are equal.
-			return leftEqualRight, nil
+			return LeftEqualRight, nil
 		}
 		if p == left.Precision || p == right.Precision {
-			return insufficientPrecision, nil
+			return InsufficientPrecision, nil
 		}
 	}
-	return leftEqualRight, nil
+	return LeftEqualRight, nil
 }
 
 // compareDateTime returns a pure comparison of DateTimeValues. If left and right are equal up
 // to the precision of only one of the two values insufficientPrecision is returned.
-func compareDateTime(left, right result.DateTime) (comparison, error) {
-	return compareDateTimeWithPrecision(left, right, model.UNSETDATETIMEPRECISION)
+func compareDateTime(left, right result.DateTime) (Comparison, error) {
+	return CompareDateTimeWithPrecision(left, right, model.UNSETDATETIMEPRECISION)
+}
+
+// CompareTimeWithPrecision returns a comparison of Time values with the given maximum
+// TimePrecision. If either left or right has insufficient precision to determine which is greater
+// before reaching maxPrecision then insufficientPrecision is returned.
+func CompareTimeWithPrecision(left, right result.Time, maxPrecision model.DateTimePrecision) (Comparison, error) {
+	if maxPrecision == model.UNSETDATETIMEPRECISION {
+		// If precision is unset, proceed until the finest precision specified by either input.
+		finestPrecision, err := getFinestPrecision(left.Precision, right.Precision)
+		if err != nil {
+			return UnsetComparison, err
+		}
+		maxPrecision = finestPrecision
+	}
+
+	for _, p := range orderedPrecisions {
+		switch p {
+		case model.HOUR:
+			if r := cmp.Compare(left.Date.Hour(), right.Date.Hour()); r != 0 {
+				return toComparison(r), nil
+			}
+		case model.MINUTE:
+			if r := cmp.Compare(left.Date.Minute(), right.Date.Minute()); r != 0 {
+				return toComparison(r), nil
+			}
+		// TODO: b/329321570 - According to the spec, we may need to combine seconds and milliseconds
+		// into a decimal, and do the comparison at the seconds precision.
+		case model.SECOND:
+			if r := cmp.Compare(left.Date.Second(), right.Date.Second()); r != 0 {
+				return toComparison(r), nil
+			}
+		case model.MILLISECOND:
+			r := cmp.Compare(left.Date.UnixMilli(), right.Date.UnixMilli())
+			return toComparison(r), nil
+		}
+		if p == maxPrecision {
+			// Reached the max required precision, so they are equal.
+			return LeftEqualRight, nil
+		}
+		if p == left.Precision || p == right.Precision {
+			return InsufficientPrecision, nil
+		}
+	}
+	return LeftEqualRight, nil
+}
+
+// compareTime returns a pure comparison of Time values. If left and right are equal up
+// to the precision of only one of the two values insufficientPrecision is returned.
+func compareTime(left, right result.Time) (Comparison, error) {
+	return CompareTimeWithPrecision(left, right, model.UNSETDATETIMEPRECISION)
 }
 
 func normalizeDateTime(d result.DateTime) result.DateTime {
@@ -813,17 +935,17 @@ func normalizeDateTime(d result.DateTime) result.DateTime {
 	return d
 }
 
-// toComparison converts the result of cmp.Compare() to comparison.
-func toComparison(a int) comparison {
+// toComparison converts the result of cmp.Compare() to Comparison.
+func toComparison(a int) Comparison {
 	switch a {
 	case -1:
-		return leftBeforeRight
+		return LeftBeforeRight
 	case 0:
-		return leftEqualRight
+		return LeftEqualRight
 	case 1:
-		return leftAfterRight
+		return LeftAfterRight
 	}
-	return unsetComparison
+	return UnsetComparison
 }
 
 func validateDateTimePrecision(precision model.DateTimePrecision, allowUnset bool) error {

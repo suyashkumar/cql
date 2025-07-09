@@ -100,9 +100,9 @@ func evalEqualDateTime(_ model.IBinaryExpression, lObj, rObj result.Value) (resu
 		return result.Value{}, err
 	}
 	switch comp {
-	case leftEqualRight:
+	case LeftEqualRight:
 		return result.New(true)
-	case insufficientPrecision:
+	case InsufficientPrecision:
 		return result.New(nil)
 	default:
 		return result.New(false)
@@ -380,9 +380,37 @@ func evalEquivalentDateTime(_ model.IBinaryExpression, lObj, rObj result.Value) 
 		return result.Value{}, err
 	}
 	switch comp {
-	case leftEqualRight:
+	case LeftEqualRight:
 		return result.New(true)
-	case insufficientPrecision:
+	case InsufficientPrecision:
+		return result.New(false)
+	default:
+		return result.New(false)
+	}
+}
+
+// ~(left Time, right Time) Boolean
+// All equivalent overloads should be resilient to a nil model.
+// https://cql.hl7.org/09-b-cqlreference.html#equivalent
+func evalEquivalentTime(_ model.IBinaryExpression, lObj, rObj result.Value) (result.Value, error) {
+	if result.IsNull(lObj) && result.IsNull(rObj) {
+		return result.New(true)
+	}
+	if result.IsNull(lObj) != result.IsNull(rObj) {
+		return result.New(false)
+	}
+	lVal, rVal, err := applyToValues(lObj, rObj, result.ToTime)
+	if err != nil {
+		return result.Value{}, err
+	}
+	comp, err := compareTime(lVal, rVal)
+	if err != nil {
+		return result.Value{}, err
+	}
+	switch comp {
+	case LeftEqualRight:
+		return result.New(true)
+	case InsufficientPrecision:
 		return result.New(false)
 	default:
 		return result.New(false)
@@ -547,6 +575,32 @@ func evalCompareDateTime(m model.IBinaryExpression, lObj, rObj result.Value) (re
 		return afterDateTime(l, r)
 	case *model.GreaterOrEqual:
 		return afterOrEqualDateTime(l, r)
+	}
+	return result.Value{}, fmt.Errorf("internal error - unsupported Binary Comparison Expression %v", m)
+}
+
+// op(left Time, right Time) Boolean
+// https://cql.hl7.org/09-b-cqlreference.html#less
+// https://cql.hl7.org/09-b-cqlreference.html#less-or-equal
+// https://cql.hl7.org/09-b-cqlreference.html#greater
+// https://cql.hl7.org/09-b-cqlreference.html#greater-or-equal
+func evalCompareTime(m model.IBinaryExpression, lObj, rObj result.Value) (result.Value, error) {
+	if result.IsNull(lObj) || result.IsNull(rObj) {
+		return result.New(nil)
+	}
+	l, r, err := applyToValues(lObj, rObj, result.ToTime)
+	if err != nil {
+		return result.Value{}, err
+	}
+	switch m.(type) {
+	case *model.Less:
+		return beforeTime(l, r)
+	case *model.LessOrEqual:
+		return beforeOrEqualTime(l, r)
+	case *model.Greater:
+		return afterTime(l, r)
+	case *model.GreaterOrEqual:
+		return afterOrEqualTime(l, r)
 	}
 	return result.Value{}, fmt.Errorf("internal error - unsupported Binary Comparison Expression %v", m)
 }

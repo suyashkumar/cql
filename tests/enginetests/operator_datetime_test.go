@@ -31,6 +31,42 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
+func TestCompareTimeWithPrecision(t *testing.T) {
+	tests := []struct {
+		name      string
+		l         result.Time
+		r         result.Time
+		precision model.DateTimePrecision
+		want      interpreter.Comparison
+	}{
+		{
+			name: "same time with hour precision returns 0",
+			l: result.Time{
+				Date:      time.Date(0, time.January, 1, 10, 20, 30, 1e8, time.UTC),
+				Precision: model.MILLISECOND,
+			},
+			r: result.Time{
+				Date:      time.Date(0, time.January, 1, 10, 20, 30, 1e8, time.UTC),
+				Precision: model.MILLISECOND,
+			},
+			precision: model.HOUR,
+			want:      interpreter.LeftEqualRight,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := interpreter.CompareTimeWithPrecision(test.l, test.r, test.precision)
+			if err != nil {
+				t.Errorf("CompareTimeWithPrecision(%v, %v, %v) returned unexpected error: %v", test.l, test.r, test.precision, err)
+			}
+			if got != test.want {
+				t.Errorf("CompareTimeWithPrecision(%v, %v, %v) = %v, want %v", test.l, test.r, test.precision, got, test.want)
+			}
+		})
+	}
+}
+
 func TestCanConvertQuantity(t *testing.T) {
 	tests := []struct {
 		name       string

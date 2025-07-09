@@ -905,7 +905,7 @@ func dateTimeSuccessor(dt result.Value, evaluationTimestamp *time.Time) (result.
 	maxDt.Precision = d.Precision
 	if cmpResult, err := compareDateTime(d, maxDt); err != nil {
 		return result.Value{}, err
-	} else if cmpResult == leftEqualRight || cmpResult == leftAfterRight {
+	} else if cmpResult == LeftEqualRight || cmpResult == LeftAfterRight {
 		return result.Value{}, fmt.Errorf("tried to compute successor for %s that is already a max value for it's precision, %v", t, dt.GolangValue())
 	}
 
