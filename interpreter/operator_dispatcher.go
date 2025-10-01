@@ -297,6 +297,25 @@ func (i *interpreter) unaryOverloads(m model.IUnaryExpression) ([]convert.Overlo
 				Result:   evalToLongBoolean,
 			},
 		}, nil
+	case *model.ToBoolean:
+		return []convert.Overload[evalUnarySignature]{
+			{
+				Operands: []types.IType{types.Decimal},
+				Result:   evalToBoolean,
+			},
+			{
+				Operands: []types.IType{types.Long},
+				Result:   evalToBoolean,
+			},
+			{
+				Operands: []types.IType{types.Integer},
+				Result:   evalToBoolean,
+			},
+			{
+				Operands: []types.IType{types.String},
+				Result:   evalToBooleanString,
+			},
+		}, nil
 	case *model.ToQuantity:
 		return []convert.Overload[evalUnarySignature]{
 			{

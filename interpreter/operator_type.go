@@ -440,6 +440,67 @@ func evalToQuantityString(m model.IUnaryExpression, opObj result.Value) (result.
 	return result.New(result.Quantity{Value: f, Unit: model.Unit(unit)})
 }
 
+// ToBoolean(argument Decimal) Boolean
+// ToBoolean(argument Long) Boolean
+// ToBoolean(argument Integer) Boolean
+// https://cql.hl7.org/09-b-cqlreference.html#toboolean
+func evalToBoolean(m model.IUnaryExpression, opObj result.Value) (result.Value, error) {
+	if result.IsNull(opObj) {
+		return result.New(nil)
+	}
+
+	switch v := opObj.GolangValue().(type) {
+	case int32:
+		if v == 1 {
+			return result.New(true)
+		}
+		if v == 0 {
+			return result.New(false)
+		}
+		return result.New(nil)
+	case int64:
+		if v == 1 {
+			return result.New(true)
+		}
+		if v == 0 {
+			return result.New(false)
+		}
+		return result.New(nil)
+	case float64:
+		if v == 1.0 {
+			return result.New(true)
+		}
+		if v == 0.0 {
+			return result.New(false)
+		}
+		return result.New(nil)
+	default:
+		return result.Value{}, fmt.Errorf("ToBoolean cannot be evaluated on type %T", v)
+	}
+}
+
+// ToBoolean(argument String) Boolean
+// https://cql.hl7.org/09-b-cqlreference.html#toboolean
+func evalToBooleanString(m model.IUnaryExpression, opObj result.Value) (result.Value, error) {
+	if result.IsNull(opObj) {
+		return result.New(nil)
+	}
+	s, err := result.ToString(opObj)
+	if err != nil {
+		return result.Value{}, err
+	}
+
+	lowerS := strings.ToLower(s)
+	switch lowerS {
+	case "true", "t", "yes", "y", "1":
+		return result.New(true)
+	case "false", "f", "no", "n", "0":
+		return result.New(false)
+	default:
+		return result.New(nil)
+	}
+}
+
 // Add an @ symbol to the string so we can use the same parsing logic as engine literals.
 func (i *interpreter) stringToDate(input string, inputType types.System) (result.Value, error) {
 	return i.evalLiteral(&model.Literal{
