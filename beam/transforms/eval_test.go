@@ -19,7 +19,6 @@ import (
 	"testing"
 	"time"
 
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	cbpb "github.com/google/cql/protos/cql_beam_go_proto"
 	crpb "github.com/google/cql/protos/cql_result_go_proto"
 	"github.com/google/fhir/go/fhirversion"
@@ -29,6 +28,7 @@ import (
 	"github.com/lithammer/dedent"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestCQLEvalFn(t *testing.T) {

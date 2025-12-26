@@ -20,10 +20,10 @@ import (
 	"testing"
 	"time"
 
-	anypb "google.golang.org/protobuf/types/known/anypb"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	datepb "google.golang.org/genproto/googleapis/type/date"
 	timeofdaypb "google.golang.org/genproto/googleapis/type/timeofday"
+	anypb "google.golang.org/protobuf/types/known/anypb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/google/cql/internal/datehelpers"
 	"github.com/google/cql/model"

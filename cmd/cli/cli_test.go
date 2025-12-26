@@ -28,10 +28,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/bulk_fhir_tools/testhelpers"
 	"github.com/google/cql/result"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/bulk_fhir_tools/testhelpers"
 )
 
 const testBucketName = "bucketName"

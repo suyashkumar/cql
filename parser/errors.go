@@ -18,10 +18,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/antlr4-go/antlr/v4"
 	"github.com/google/cql/model"
 	"github.com/google/cql/result"
 	"github.com/google/cql/types"
-	"github.com/antlr4-go/antlr/v4"
 )
 
 var _ antlr.ErrorListener = &visitor{}

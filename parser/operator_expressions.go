@@ -20,11 +20,11 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/antlr4-go/antlr/v4"
 	"github.com/google/cql/internal/convert"
 	"github.com/google/cql/internal/embeddata/third_party/cqframework/cql"
 	"github.com/google/cql/model"
 	"github.com/google/cql/types"
-	"github.com/antlr4-go/antlr/v4"
 )
 
 // handleBeforeOrAfterInterval processes a BeforeOrAfterIntervalOperatorPhraseContext and returns

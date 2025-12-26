@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/google/bulk_fhir_tools/gcs"
 	"github.com/google/cql/retriever/local"
 	r4pb "github.com/google/fhir/go/proto/google/fhir/proto/r4/core/resources/bundle_and_contained_resource_go_proto"
-	"github.com/google/bulk_fhir_tools/gcs"
 )
 
 // Retriever implements the Retriever Interface.

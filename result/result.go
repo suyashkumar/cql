@@ -22,8 +22,8 @@ import (
 
 	"github.com/google/cql/model"
 	crpb "github.com/google/cql/protos/cql_result_go_proto"
-	"google.golang.org/protobuf/proto"
 	"github.com/pborman/uuid"
+	"google.golang.org/protobuf/proto"
 )
 
 // Libraries returns the results of the evaluation of a set of CQL Libraries. The inner

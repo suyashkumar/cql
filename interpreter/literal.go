@@ -192,7 +192,7 @@ func (i *interpreter) evalTuple(in *model.Tuple) (result.Value, error) {
 }
 
 func (i *interpreter) evalInstance(in *model.Instance) (result.Value, error) {
-	elems := make(map[string]result.Value)
+	elems := make(map[string]result.Value, len(in.Elements))
 	for _, elem := range in.Elements {
 		obj, err := i.evalExpression(elem.Value)
 		if err != nil {

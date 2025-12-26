@@ -19,16 +19,16 @@ import (
 	"reflect"
 	"time"
 
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	"github.com/apache/beam/sdks/v2/go/pkg/beam"
+	"github.com/apache/beam/sdks/v2/go/pkg/beam/register"
 	"github.com/google/cql"
 	cbpb "github.com/google/cql/protos/cql_beam_go_proto"
 	"github.com/google/cql/result"
 	"github.com/google/cql/retriever/local"
 	"github.com/google/cql/terminology"
 	bpb "github.com/google/fhir/go/proto/google/fhir/proto/r4/core/resources/bundle_and_contained_resource_go_proto"
-	"github.com/apache/beam/sdks/v2/go/pkg/beam"
-	"github.com/apache/beam/sdks/v2/go/pkg/beam/register"
 	"google.golang.org/protobuf/proto"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const counterPrefix = "beam_cql"

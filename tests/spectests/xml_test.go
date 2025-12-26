@@ -25,9 +25,9 @@ import (
 
 	"github.com/google/cql"
 	"github.com/google/cql/result"
-	"github.com/google/cql/tests/spectests/third_party/cqltests"
 	"github.com/google/cql/tests/spectests/exclusions"
 	"github.com/google/cql/tests/spectests/models"
+	"github.com/google/cql/tests/spectests/third_party/cqltests"
 	"github.com/google/go-cmp/cmp"
 	"slices"
 )

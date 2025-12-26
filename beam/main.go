@@ -24,10 +24,10 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/golang/glog"
-	"github.com/apache/beam/sdks/v2/go/pkg/beam/x/beamx"
-	"github.com/google/cql/beam/transforms"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam"
+	"github.com/apache/beam/sdks/v2/go/pkg/beam/x/beamx"
+	log "github.com/golang/glog"
+	"github.com/google/cql/beam/transforms"
 
 	// The following import is required for accessing local files.
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/io/fileio"
@@ -41,9 +41,9 @@ import (
 // flags holds the values of the flags largely to assist in easier testing without having to change
 // global variables.
 type beamFlags struct {
-	CQLDir             string
-	FHIRBundleDir      string
-	FHIRTerminologyDir string
+	CQLDir              string
+	FHIRBundleDir       string
+	FHIRTerminologyDir  string
 	EvaluationTimestamp string
 	ReturnPrivateDefs   bool
 	NDJSONOutputDir     string
@@ -69,8 +69,8 @@ type pipelineConfig struct {
 	FHIRBundleDir       string
 	ValueSets           []string
 	EvaluationTimestamp time.Time
-	ReturnPrivateDefs bool
-	NDJSONOutputDir   string
+	ReturnPrivateDefs   bool
+	NDJSONOutputDir     string
 }
 
 func buildPipelineConfig(flags *beamFlags) (*pipelineConfig, error) {
@@ -84,15 +84,15 @@ func buildPipelineConfig(flags *beamFlags) (*pipelineConfig, error) {
 		NDJSONOutputDir:   flags.NDJSONOutputDir,
 	}
 
-		if flags.EvaluationTimestamp != "" {
-			var err error
-			cfg.EvaluationTimestamp, err = time.Parse(time.RFC3339, flags.EvaluationTimestamp)
-			if err != nil {
-				return nil, fmt.Errorf("evaluation_timestamp must be in RFC3339 format: %v", err)
-			}
-		} else {
-			cfg.EvaluationTimestamp = time.Now()
+	if flags.EvaluationTimestamp != "" {
+		var err error
+		cfg.EvaluationTimestamp, err = time.Parse(time.RFC3339, flags.EvaluationTimestamp)
+		if err != nil {
+			return nil, fmt.Errorf("evaluation_timestamp must be in RFC3339 format: %v", err)
 		}
+	} else {
+		cfg.EvaluationTimestamp = time.Now()
+	}
 
 	if flags.CQLDir == "" {
 		return nil, fmt.Errorf("cql_dir must be set")
@@ -152,13 +152,13 @@ func buildPipeline(s beam.Scope, cfg *pipelineConfig) (results, errors beam.PCol
 	bundles, loadErrors := beam.ParDo2(s, transforms.FileToBundle, files)
 
 	var evalErrors beam.PCollection
-		fn := &transforms.CQLEvalFn{
-			CQL:                 cfg.CQL,
-			ValueSets:           cfg.ValueSets,
-			EvaluationTimestamp: cfg.EvaluationTimestamp,
-			ReturnPrivateDefs:   cfg.ReturnPrivateDefs,
-		}
-		results, evalErrors = beam.ParDo2(s, fn, bundles)
+	fn := &transforms.CQLEvalFn{
+		CQL:                 cfg.CQL,
+		ValueSets:           cfg.ValueSets,
+		EvaluationTimestamp: cfg.EvaluationTimestamp,
+		ReturnPrivateDefs:   cfg.ReturnPrivateDefs,
+	}
+	results, evalErrors = beam.ParDo2(s, fn, bundles)
 
 	ndjsonRows, writeErrors := beam.ParDo2(s, transforms.NDJSONSink, results)
 	// TODO: b/339070720: Shard the output files.

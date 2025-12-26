@@ -25,8 +25,8 @@ import (
 	"strings"
 
 	"cloud.google.com/go/storage"
-	"google.golang.org/api/iterator"
 	"github.com/google/bulk_fhir_tools/gcs"
+	"google.golang.org/api/iterator"
 )
 
 // IOConfig contains configuration options for IO functions.
