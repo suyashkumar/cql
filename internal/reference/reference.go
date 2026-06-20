@@ -51,10 +51,13 @@ type Resolver[T any, F any] struct {
 	// modifiers.
 	builtinFuncs map[string][]convert.Overload[F]
 
+	overloadScratch []convert.Overload[F]
+
 	// aliases, unlike the other maps are not persistent between CQL libraries or even across scopes.
 	// Aliases work like a stack and are cleared once we exit the scope in which the alias was
 	// defined. Aliases live in the same namespace as definitions.
 	aliases []map[aliasKey]T
+	aliasDepth int
 
 	// scopedStructs hold the struct that are currently in scope for evaluation. For instance,
 	// an an expression like `[Encounter] O sort by start of period` places each encounter in scope,
@@ -98,9 +101,10 @@ func NewResolver[T any, F any]() *Resolver[T, F] {
 		defs:         make(map[defKey]exprDef[T]),
 		funcs:        make(map[defKey][]funcDef[F]),
 		builtinFuncs: make(map[string][]convert.Overload[F]),
-		aliases:      make([]map[aliasKey]T, 0),
+		aliases:      make([]map[aliasKey]T, 0, 8),
 		libs:         make(map[namedLibKey]struct{}),
 		includedLibs: make(map[includeKey]*model.LibraryIdentifier),
+		overloadScratch: make([]convert.Overload[F], 0, 32),
 	}
 }
 
@@ -108,7 +112,7 @@ func NewResolver[T any, F any]() *Resolver[T, F] {
 func (r *Resolver[T, F]) ClearDefs() {
 	r.defs = make(map[defKey]exprDef[T])
 	r.funcs = make(map[defKey][]funcDef[F])
-	r.aliases = make([]map[aliasKey]T, 0)
+	r.aliasDepth = 0
 	r.libs = make(map[namedLibKey]struct{})
 	r.includedLibs = make(map[includeKey]*model.LibraryIdentifier)
 }
@@ -284,19 +288,18 @@ func (r *Resolver[T, F]) ResolveGlobalFunc(libName string, defName string, opera
 	}
 
 	dKey := defKey{namedLibKey{qualified: qKey.Qualified, version: qKey.Version}, defName}
-	var overloads []convert.Overload[F]
+	r.overloadScratch = r.overloadScratch[:0]
 	if fDefs, ok := r.funcs[dKey]; ok {
-		// Filter overloads that are not public or fluent before calling OverloadMatch.
 		for _, fDef := range fDefs {
 			if fDef.isPublic {
 				if !calledFluently || (calledFluently && fDef.isFluent) {
-					overloads = append(overloads, fDef.overload)
+					r.overloadScratch = append(r.overloadScratch, fDef.overload)
 				}
 			}
 		}
 	}
 
-	ref, err := convert.OverloadMatch(operands, overloads, modelInfo, fmt.Sprintf("%v.%v", libName, defName))
+	ref, err := convert.OverloadMatch(operands, r.overloadScratch, modelInfo, fmt.Sprintf("%v.%v", libName, defName))
 	if err != nil {
 		return nil, err
 	}
@@ -313,19 +316,18 @@ func (r *Resolver[T, F]) ResolveExactGlobalFunc(libName string, defName string, 
 	}
 
 	dKey := defKey{namedLibKey{qualified: qKey.Qualified, version: qKey.Version}, defName}
-	var overloads []convert.Overload[F]
+	r.overloadScratch = r.overloadScratch[:0]
 	if fDefs, ok := r.funcs[dKey]; ok {
-		// Filter overloads that are not public or fluent before calling ExactOverloadMatch.
 		for _, fDef := range fDefs {
 			if fDef.isPublic {
 				if !calledFluently || (calledFluently && fDef.isFluent) {
-					overloads = append(overloads, fDef.overload)
+					r.overloadScratch = append(r.overloadScratch, fDef.overload)
 				}
 			}
 		}
 	}
 
-	ref, err := convert.ExactOverloadMatch(operands, overloads, modelInfo, fmt.Sprintf("%v.%v", libName, defName))
+	ref, err := convert.ExactOverloadMatch(operands, r.overloadScratch, modelInfo, fmt.Sprintf("%v.%v", libName, defName))
 	if err != nil {
 		return zero[F](), err
 	}
@@ -350,22 +352,21 @@ func (r *Resolver[T, F]) ResolveLocal(name string) (T, error) {
 // ResolveLocalFunc resolves a reference to a user defined or built-in function in the current CQL
 // library.
 func (r *Resolver[T, F]) ResolveLocalFunc(name string, operands []model.IExpression, calledFluently bool, modelInfo *modelinfo.ModelInfos) (*convert.MatchedOverload[F], error) {
-	overloads := make([]convert.Overload[F], 0)
+	r.overloadScratch = r.overloadScratch[:0]
 	if overs, ok := r.builtinFuncs[name]; ok {
-		overloads = append(overloads, overs...)
+		r.overloadScratch = append(r.overloadScratch, overs...)
 	}
 
 	fDefs, ok := r.funcs[defKey{r.currLib, name}]
 	if ok {
-		// Filter overloads that are fluent before calling OverloadMatch.
 		for _, fDef := range fDefs {
 			if !calledFluently || (calledFluently && fDef.isFluent) {
-				overloads = append(overloads, fDef.overload)
+				r.overloadScratch = append(r.overloadScratch, fDef.overload)
 			}
 		}
 	}
 
-	ref, err := convert.OverloadMatch(operands, overloads, modelInfo, name)
+	ref, err := convert.OverloadMatch(operands, r.overloadScratch, modelInfo, name)
 	if err != nil {
 		return nil, err
 	}
@@ -375,22 +376,21 @@ func (r *Resolver[T, F]) ResolveLocalFunc(name string, operands []model.IExpress
 // ResolveExactLocalFunc resolves a reference to a user defined function in the current CQL library
 // without any implicit conversions.
 func (r *Resolver[T, F]) ResolveExactLocalFunc(name string, operands []types.IType, calledFluently bool, modelInfo *modelinfo.ModelInfos) (F, error) {
-	overloads := make([]convert.Overload[F], 0)
+	r.overloadScratch = r.overloadScratch[:0]
 	if overs, ok := r.builtinFuncs[name]; ok {
-		overloads = append(overloads, overs...)
+		r.overloadScratch = append(r.overloadScratch, overs...)
 	}
 
 	fDefs, ok := r.funcs[defKey{r.currLib, name}]
 	if ok {
-		// Filter overloads that are fluent before calling ExactOverloadMatch.
 		for _, fDef := range fDefs {
 			if !calledFluently || (calledFluently && fDef.isFluent) {
-				overloads = append(overloads, fDef.overload)
+				r.overloadScratch = append(r.overloadScratch, fDef.overload)
 			}
 		}
 	}
 
-	ref, err := convert.ExactOverloadMatch(operands, overloads, modelInfo, name)
+	ref, err := convert.ExactOverloadMatch(operands, r.overloadScratch, modelInfo, name)
 	if err != nil {
 		return zero[F](), err
 	}
@@ -400,13 +400,19 @@ func (r *Resolver[T, F]) ResolveExactLocalFunc(name string, operands []types.ITy
 // EnterScope starts a new scope for aliases. EndScope should be called to remove all aliases in
 // this scope.
 func (r *Resolver[T, F]) EnterScope() {
-	r.aliases = append(r.aliases, make(map[aliasKey]T))
+	if r.aliasDepth >= len(r.aliases) {
+		r.aliases = append(r.aliases, make(map[aliasKey]T))
+	}
+	r.aliasDepth++
 }
 
 // ExitScope clears any aliases created since the last call to EnterScope.
 func (r *Resolver[T, F]) ExitScope() {
-	if len(r.aliases) > 0 {
-		r.aliases = r.aliases[:len(r.aliases)-1]
+	if r.aliasDepth > 0 {
+		r.aliasDepth--
+		for k := range r.aliases[r.aliasDepth] {
+			delete(r.aliases[r.aliasDepth], k)
+		}
 	}
 }
 
@@ -439,14 +445,14 @@ func (r *Resolver[T, F]) ScopedStruct() (T, error) {
 // scope will be removed. Calling ResolveLocal with the same name will return the stored type t.
 // Names must be unique within the CQL library.
 func (r *Resolver[T, F]) Alias(name string, a T) error {
-	if len(r.aliases) == 0 {
+	if r.aliasDepth == 0 {
 		return errors.New("internal error - EnterScope must be called before creating an alias")
 	}
 	if err := r.isLocallyUnique(name); err != nil {
 		return err
 	}
 	aKey := aliasKey{r.currLib, name}
-	r.aliases[len(r.aliases)-1][aKey] = a
+	r.aliases[r.aliasDepth-1][aKey] = a
 	return nil
 }
 
@@ -537,8 +543,8 @@ func (r *Resolver[T, F]) isFuncLocallyUnique(name string, operands []types.IType
 }
 
 func (r *Resolver[T, F]) findAlias(aKey aliasKey) (T, bool) {
-	for _, aMap := range r.aliases {
-		if t, ok := aMap[aKey]; ok {
+	for i := 0; i < r.aliasDepth; i++ {
+		if t, ok := r.aliases[i][aKey]; ok {
 			return t, true
 		}
 	}
@@ -609,4 +615,12 @@ type aliasKey struct {
 func zero[T any]() T {
 	var zero T
 	return zero
+}
+
+// PreallocateFuncs preallocates the underlying slice for the given function name.
+func (r *Resolver[T, F]) PreallocateFuncs(name string, count int) {
+	dKey := defKey{r.currLib, name}
+	if _, ok := r.funcs[dKey]; !ok {
+		r.funcs[dKey] = make([]funcDef[F], 0, count)
+	}
 }

@@ -215,6 +215,16 @@ func (i *interpreter) evalLibrary(lib *model.Library, passedParams map[result.De
 	}
 
 	if lib.Statements != nil {
+		funcCounts := make(map[string]int)
+		for _, s := range lib.Statements.Defs {
+			if _, ok := s.(*model.FunctionDef); ok {
+				funcCounts[s.GetName()]++
+			}
+		}
+		for name, count := range funcCounts {
+			i.refs.PreallocateFuncs(name, count)
+		}
+
 		for _, s := range lib.Statements.Defs {
 			switch t := s.(type) {
 			case *model.ExpressionDef:
@@ -232,7 +242,7 @@ func (i *interpreter) evalLibrary(lib *model.Library, passedParams map[result.De
 					return err
 				}
 			case *model.FunctionDef:
-				opTypes := []types.IType{}
+					opTypes := make([]types.IType, 0, len(t.Operands))
 				for _, op := range t.Operands {
 					opTypes = append(opTypes, op.GetResultType())
 				}
