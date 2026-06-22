@@ -458,10 +458,24 @@ func (m *ModelInfos) IsSubType(child, base types.IType) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if tin.BaseType == anyModelName {
-		return false, nil
+
+	currName := tin.BaseType
+	depth := 0
+	for currName != anyModelName && currName != "" {
+		if currName == pName {
+			return true, nil
+		}
+		currNode, ok := model.typeMap[currName]
+		if !ok {
+			break
+		}
+		currName = currNode.BaseType
+		depth++
+		if depth > 100000 {
+			return false, fmt.Errorf("internal error - subtype depth exceeded 100000 for %v", child)
+		}
 	}
-	return m.IsSubType(typeSpecifierFromElementType(tin.BaseType), base)
+	return false, nil
 }
 
 // SetUsing corresponds to a CQL using declaration.
