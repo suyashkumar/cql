@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/antlr4-go/antlr/v4"
 	"github.com/google/cql/internal/embeddata/third_party/cqframework/cql"
 	"github.com/google/cql/internal/modelinfo"
 	"github.com/google/cql/internal/reference"
 	"github.com/google/cql/model"
 	"github.com/google/cql/result"
-	"github.com/antlr4-go/antlr/v4"
 	"gopkg.in/gyuho/goraph.v2"
 )
 

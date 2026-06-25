@@ -22,9 +22,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/apache/beam/sdks/v2/go/pkg/beam"
 	cbpb "github.com/google/cql/protos/cql_beam_go_proto"
 	"github.com/google/cql/result"
-	"github.com/apache/beam/sdks/v2/go/pkg/beam"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )

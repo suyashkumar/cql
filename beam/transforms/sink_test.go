@@ -19,12 +19,12 @@ import (
 	"testing"
 	"time"
 
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	cbpb "github.com/google/cql/protos/cql_beam_go_proto"
 	crpb "github.com/google/cql/protos/cql_result_go_proto"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/protobuf/proto"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestNDJSONSink(t *testing.T) {

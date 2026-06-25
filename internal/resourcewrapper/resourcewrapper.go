@@ -18,8 +18,8 @@ package resourcewrapper
 import (
 	"fmt"
 
-	"github.com/google/fhir/go/protopath"
 	r4pb "github.com/google/fhir/go/proto/google/fhir/proto/r4/core/resources/bundle_and_contained_resource_go_proto"
+	"github.com/google/fhir/go/protopath"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

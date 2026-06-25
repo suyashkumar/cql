@@ -20,8 +20,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/google/bulk_fhir_tools/testhelpers"
+	"github.com/google/go-cmp/cmp"
 )
 
 const testBucketName = "bucketName"

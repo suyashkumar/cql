@@ -18,11 +18,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/apache/beam/sdks/v2/go/pkg/beam/io/fileio"
 	cbpb "github.com/google/cql/protos/cql_beam_go_proto"
 	"github.com/google/fhir/go/fhirversion"
 	"github.com/google/fhir/go/jsonformat"
 	bpb "github.com/google/fhir/go/proto/google/fhir/proto/r4/core/resources/bundle_and_contained_resource_go_proto"
-	"github.com/apache/beam/sdks/v2/go/pkg/beam/io/fileio"
 	"google.golang.org/protobuf/proto"
 )
 

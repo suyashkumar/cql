@@ -23,16 +23,16 @@ import (
 	"testing"
 	"time"
 
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	cbpb "github.com/google/cql/protos/cql_beam_go_proto"
-	crpb "github.com/google/cql/protos/cql_result_go_proto"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/testing/ptest"
+	cbpb "github.com/google/cql/protos/cql_beam_go_proto"
+	crpb "github.com/google/cql/protos/cql_result_go_proto"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/lithammer/dedent"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestPipeline(t *testing.T) {

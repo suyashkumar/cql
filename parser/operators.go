@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/antlr4-go/antlr/v4"
 	"github.com/google/cql/internal/convert"
 	"github.com/google/cql/model"
 	"github.com/google/cql/types"
-	"github.com/antlr4-go/antlr/v4"
 )
 
 // parseFunction uses the reference resolver to resolve the function, visits the operands, and sets

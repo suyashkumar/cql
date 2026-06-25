@@ -29,8 +29,8 @@ import (
 	"github.com/google/cql/model"
 	"github.com/google/cql/result"
 	"github.com/google/cql/types"
-	"github.com/google/fhir/go/protopath"
 	annotations_pb "github.com/google/fhir/go/proto/google/fhir/proto/annotations_go_proto"
+	"github.com/google/fhir/go/protopath"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

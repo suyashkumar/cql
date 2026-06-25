@@ -28,6 +28,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/bulk_fhir_tools/gcs"
 	"github.com/google/cql"
 	"github.com/google/cql/internal/datehelpers"
 	"github.com/google/cql/internal/iohelpers"
@@ -36,7 +37,6 @@ import (
 	"github.com/google/cql/terminology"
 	"github.com/google/fhir/go/fhirversion"
 	"github.com/google/fhir/go/jsonformat"
-	"github.com/google/bulk_fhir_tools/gcs"
 )
 
 type cliConfig struct {

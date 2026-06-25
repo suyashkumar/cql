@@ -18,10 +18,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/bulk_fhir_tools/testhelpers"
 	"github.com/google/cql/retriever/local"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
-	"github.com/google/bulk_fhir_tools/testhelpers"
 )
 
 func TestGCSRetrieve(t *testing.T) {

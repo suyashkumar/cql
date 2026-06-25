@@ -3,7 +3,6 @@
 package cql // Cql
 import "github.com/antlr4-go/antlr/v4"
 
-
 // A complete Visitor for a parse tree produced by CqlParser.
 type CqlVisitor interface {
 	antlr.ParseTreeVisitor
@@ -544,5 +543,4 @@ type CqlVisitor interface {
 
 	// Visit a parse tree produced by CqlParser#unit.
 	VisitUnit(ctx *UnitContext) interface{}
-
 }
